@@ -222,6 +222,14 @@ That's how it should be.
 
 ---
 
+## 📜 License
+
+The source code in this repository is released under the [MIT License](LICENSE).
+
+The book *Flower-Orchestrated Agent Architecture (FOAA)* is **not** covered by this license. It remains © Anderson Matheus Arruda, all rights reserved.
+
+---
+
 ## 👤 Author
 
 **Anderson Matheus Arruda**: software engineer and technical strategist with more than two decades of experience in distributed systems, cloud, data, AI, and autonomous agent architectures.
