@@ -1,3 +1,11 @@
+<p align="center">
+  🇺🇸 <a href="README.md">English</a> ·
+  🇧🇷 <a href="readme-pt.md">Português</a> ·
+  🇪🇸 <a href="readme-es.md">Español</a> ·
+  🇳🇱 <a href="readme-nl.md">Nederlands</a> ·
+  🇩🇪 <a href="readme-de.md">Deutsch</a>
+</p>
+
 # 🌸 FOAA — Flower-Orchestrated Agent Architecture
 
 > *A philosophy for coordinating many teams, many agents, and many subagents, learned from nature.*
