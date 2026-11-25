@@ -13,17 +13,17 @@ over the responsibility of another element:
 
 | Element | Package | Responsibility |
 |---|---|---|
-| Flower | `flowers/` | A team: one bounded unit of governed intelligence. |
-| Anther (center) | `flowers/anther/` | The flower's manager: interprets goals, delegates, reasons again over evidence, makes the final local decision. |
-| Petals | `flowers/petals/` | Specialist subagents with one clear, bounded role. |
-| Root | `flowers/root/` | Retrieval (RAG): what the flower needs to know now. |
-| Branches | `flowers/branches/` | Governed reach to tools and systems (MCP): what the flower can use. |
-| Bees | `bees/` | Cross-flower orchestrators: route, sequence, translate context, synthesize. |
-| Environment | `environment/` | Executive strategy: priorities, budgets, risk limits, quality thresholds. |
-| Governance | `governance/` | Policies, permissions, human-review (gardener) gates. |
-| Soil | `soil/` | Shared, governed, long-term memory. |
-| Wind / Light | `observers/wind/`, `observers/light/` | Observers of movement and of understanding. |
-| EDD | `edd/events/`, `edd/listeners/` | Event contracts and their consumers. |
+| Flower | `foaa/flowers/` | A team: one bounded unit of governed intelligence. |
+| Anther (center) | `foaa/flowers/anther/` | The flower's **agent**: calls its subagents, coordinates them, reasons again over evidence, makes the final local decision. |
+| Petals | `foaa/flowers/petals/` | The flower's **subagents**: specialists with one clear, bounded role. |
+| Root | `foaa/flowers/root/` | Retrieval (RAG): what the flower needs to know now. |
+| Branches | `foaa/flowers/branches/` | Governed reach to tools and systems as an MCP **client**: what the flower can use. |
+| Bees | `foaa/bees/` | Cross-flower orchestrators: route, sequence, translate context, synthesize. |
+| Environment | `foaa/environment/` | Executive strategy: priorities, budgets, risk limits, quality thresholds. |
+| Governance | `foaa/governance/` | Policies, permissions, human-review (gardener) gates. |
+| Soil | `foaa/soil/` | Shared, governed, long-term memory. |
+| Wind / Light | `foaa/observers/wind/`, `foaa/observers/light/` | Observers of movement and of understanding. |
+| EDD | `foaa/edd/events/`, `foaa/edd/listeners/` | Event contracts and their consumers. |
 
 Rules:
 - A bee MUST communicate only with a flower's center, never directly with its petals.
@@ -35,10 +35,36 @@ Rules:
 
 Rationale: the metaphor is the architecture. Blurred roles recreate the chaos FOAA exists to remove.
 
+#### Agents, Subagents, and Capabilities
+
+- **Agent** = the flower center (anther). **Subagent** = a petal.
+- The user defines every agent and subagent. FOAA provides the base classes, contracts, and the
+  harness that runs, governs, and observes them; it MUST NOT ship fixed, hard-wired agents.
+- The center and petal classes receive the same capability kit, either as constructor
+  parameters or through setters. Each capability is optional: a center or petal receives it or
+  not, as the user decides.
+  - **Prompt**: identity, role, and instructions.
+  - **Skills**: stored capabilities (not classes) that the user keeps wherever they want and
+    hands to a center or petal through a parameter or setter. FOAA MUST NOT impose a storage
+    location or registry. Skills MUST be provider-agnostic.
+  - **MCP connections**: FOAA acts only as an MCP **client**; it consumes existing MCP servers
+    and MUST NOT expose itself as an MCP server.
+  - **RAG sources**: the roots the agent or subagent may retrieve from.
+  - **Policy**: the governance boundary for all of the above (Principle II).
+- The only structural difference: the **center calls subagents and coordinates them**; a petal
+  executes its specialty and returns its result to the center. A petal MUST NOT call or
+  coordinate other subagents.
+- Default policy for a center SHOULD favor reading and understanding (RAG, read-only MCP,
+  planning and evaluation skills) over direct execution, so the center coordinates instead of
+  doing the petals' work. Each flower's policy may override this default.
+- A bee is also an agent built from the same kit, but it is the center of no flower: it
+  coordinates flowers only through their centers.
+
 ### II. Bounded Autonomy, Governed by Default
 
-- Every petal MUST run under an explicit policy declaring allowed actions, accessible tools and
-  data, restricted resources, and the actions that require review.
+- Every agent and subagent (center, petal, bee) MUST run under an explicit policy declaring
+  allowed actions, skills, MCP connections, RAG sources, restricted resources, and the actions
+  that require review.
 - Access is deny-by-default: an action not allowed by policy MUST be rejected, and the rejection
   MUST be observable.
 - Human-review (gardener) gates MUST be expressible in policy and MUST block the action until
@@ -116,7 +142,9 @@ Rationale: a framework about clarity must itself be clear.
 ## Scope: What FOAA Is and Is Not
 
 **FOAA is:**
-- A Python framework/library (`import foaa`) for building governed, observable multi-agent systems.
+- An orchestrator with a harness: a Python framework/library (`import foaa`) that runs,
+  coordinates, governs, and observes multi-agent systems the user defines. It is flexible by
+  design, not a rigid product.
 - A set of building blocks (flowers, anthers, petals, roots, branches, bees, environment,
   governance, soil, observers, events) and the contracts between them.
 - Provider-agnostic, running in a single process by default and distributable through events.
@@ -155,4 +183,4 @@ and MUST NOT be committed, reproduced, or quoted beyond brief references in this
   new principles or materially expanded guidance, PATCH for clarifications and wording.
 - Compliance is reviewed at every plan (Constitution Check) and before every release.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-21 | **Last Amended**: 2026-11-21
+**Version**: 1.2.2 | **Ratified**: 2026-11-21 | **Last Amended**: 2026-11-21

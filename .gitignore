@@ -1,2 +1,16 @@
 docs/foaa.pdf
 .claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.env
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
