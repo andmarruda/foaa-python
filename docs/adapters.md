@@ -41,7 +41,7 @@ center and cheaper models for petals.
 
 ### `AnthropicModel` defaults worth knowing
 
-* **Model:** `claude-opus-5-5`, `max_tokens=16000`. `effort=` sets `output_config.effort`.
+* **Model:** `claude-opus-5-5`, `max_tokens=16000`. `effort=` sets `output_config.effort` and defaults to `"medium"` for every FOAA agent (`None` keeps the provider default).
 * **Refusal fallbacks are on** (`fallbacks="default"`, beta `server-side-fallback-2026-07-01`):
   when a request is declined, the API retries it on a fallback model inside the same call.
   This parameter exists only on the first-party Claude API, so pass `fallbacks=None` on

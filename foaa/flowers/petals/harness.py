@@ -32,6 +32,9 @@ from foaa.flowers.common import (
 from foaa.governance import Policy
 from foaa.governance.policy import Action, ActionKind
 
+DEFAULT_EFFORT = "medium"
+"""Reasoning effort every FOAA agent asks its harness for unless told otherwise."""
+
 # -- the contract between FOAA and a harness adapter -------------------------------------------
 
 
@@ -81,6 +84,7 @@ class HarnessTask:
     feedback: str | None = None
     upstream: tuple[UpstreamResult, ...] = ()
     correlation_id: str | None = None
+    effort: str = DEFAULT_EFFORT  # "low" | "medium" | "high" | ...; the adapter maps it
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,12 +132,14 @@ class HarnessPetal:
         *,
         description: str = "",
         policy: Policy | None = None,
+        effort: str = DEFAULT_EFFORT,
     ) -> None:
         if not name.strip():
             raise ValueError("a petal needs a name")
         self.name = name
         self.description = description
         self.harness = harness
+        self.effort = effort
         self.policy = policy or Policy.for_petal(f"{name}-default")
 
     def __repr__(self) -> str:
@@ -165,6 +171,7 @@ class HarnessPetal:
             feedback=assignment.feedback,
             upstream=tuple(UpstreamResult(r.petal, r.status.value, r.conclusion) for r in upstream),
             correlation_id=ctx.correlation_id,
+            effort=self.effort,
         )
         try:
             done = await self.harness.execute(task)

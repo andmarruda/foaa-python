@@ -37,6 +37,7 @@ from foaa.flowers.common import (
     ToolCall,
 )
 
+DEFAULT_EFFORT = "medium"
 DEFAULT_MODEL = "claude-opus-5-5"
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
 
@@ -58,15 +59,15 @@ class AnthropicModel:
         *,
         model: str = DEFAULT_MODEL,
         max_tokens: int = 16_000,
-        effort: str | None = None,
+        effort: str | None = DEFAULT_EFFORT,
         cache: bool = True,
         fallbacks: str | Sequence[Mapping[str, Any]] | None = "default",
         extra: Mapping[str, Any] | None = None,
     ) -> None:
         """
         :param client: an ``AsyncAnthropic`` (or compatible) client.
-        :param effort: ``"low" | "medium" | "high" | "xhigh" | "max"``; ``None`` keeps the
-            model's default (``medium`` on Claude Opus 5.5).
+        :param effort: ``"low" | "medium" | "high" | "xhigh" | "max"``; defaults to
+            ``"medium"`` for every FOAA agent; ``None`` keeps the provider's own default.
         :param fallbacks: server-side refusal fallbacks, ``"default"`` or a list such as
             ``[{"model": "claude-opus-4-8"}]``; ``None`` disables them.
         :param extra: any additional ``messages.create`` parameters, passed through.

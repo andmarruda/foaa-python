@@ -185,3 +185,10 @@ async def test_subprocess_runner_runs_a_real_command() -> None:
     done = await SubprocessRunner().run([sys.executable, "-c", "print('hi')"])
     assert done.exit_code == 0
     assert "hi" in done.output
+
+
+async def test_harness_agents_default_to_medium_effort() -> None:
+    harness = FakeHarness(outcome("ok"), outcome("ok"))
+    await HarnessPetal("coder", harness).run(Assignment("coder", "x"), _ctx())
+    await HarnessPetal("deep", harness, effort="high").run(Assignment("deep", "x"), _ctx())
+    assert [t.effort for t in harness.tasks] == ["medium", "high"]

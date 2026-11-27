@@ -132,3 +132,17 @@ async def test_refusal_is_normalized() -> None:
     result = await AnthropicModel(client).complete(ModelRequest((Message.user("hi"),)))
     assert result.stop_reason == StopReason.REFUSAL
     assert result.content == ""
+
+
+def test_agents_default_to_medium_effort() -> None:
+    params = AnthropicModel(FakeClient(response()), fallbacks=None).build_params(
+        ModelRequest(messages=(Message.user("hi"),))
+    )
+    assert params["output_config"] == {"effort": "medium"}
+
+
+def test_effort_none_keeps_the_provider_default() -> None:
+    params = AnthropicModel(FakeClient(response()), fallbacks=None, effort=None).build_params(
+        ModelRequest(messages=(Message.user("hi"),))
+    )
+    assert "output_config" not in params
