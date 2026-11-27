@@ -1,7 +1,9 @@
 """FOAA: Flower-Orchestrated Agent Architecture.
 
-An orchestrator and harness for governed, observable multi-agent systems. The user defines
-the agents (centers) and subagents (petals); FOAA runs, governs, and observes them.
+An orchestrator for governed, observable multi-agent systems. It is not a harness: the flower
+defines agents (centers) and subagents (petals); execution belongs to the harnesses and
+connectors you already use (Claude Code, Codex, the Agent SDK, MCP...), and FOAA governs,
+coordinates, and observes them (ADR 0006).
 
     from foaa import Anther, Petal, Policy, Skill
 
@@ -18,6 +20,7 @@ from foaa.flowers.anther import (
     ModelReinference,
     PlanningStrategy,
     ReinferenceStrategy,
+    RepairLoopReinference,
     StaticPlanning,
     Step,
     ThresholdReinference,
@@ -49,6 +52,20 @@ from foaa.flowers.common import (
     ToolCall,
     ToolSpec,
 )
+from foaa.flowers.petals import (
+    CommandOutcome,
+    CommandPetal,
+    CommandRunner,
+    HarnessAction,
+    HarnessOutcome,
+    HarnessPermissions,
+    HarnessPetal,
+    HarnessPort,
+    HarnessTask,
+    ModelPetal,
+    PetalPort,
+    SubprocessRunner,
+)
 from foaa.flowers.root import InMemoryRetriever, RetrievedDocument, Retriever
 from foaa.governance import (
     ApproveAllReviewGate,
@@ -67,6 +84,9 @@ __all__ = [
     "ApproveAllReviewGate",
     "Assignment",
     "CallbackReviewGate",
+    "CommandOutcome",
+    "CommandPetal",
+    "CommandRunner",
     "DecisionStatus",
     "DenyAllReviewGate",
     "EventBus",
@@ -74,6 +94,12 @@ __all__ = [
     "Evidence",
     "FlowerDecision",
     "FoaaError",
+    "HarnessAction",
+    "HarnessOutcome",
+    "HarnessPermissions",
+    "HarnessPetal",
+    "HarnessPort",
+    "HarnessTask",
     "InMemoryEventBus",
     "InMemoryMcpConnection",
     "InMemoryRetriever",
@@ -82,6 +108,7 @@ __all__ = [
     "McpSessionConnection",
     "Message",
     "ModelOutputError",
+    "ModelPetal",
     "ModelPlanning",
     "ModelPort",
     "ModelReinference",
@@ -89,10 +116,12 @@ __all__ = [
     "ModelResponse",
     "Objective",
     "Petal",
+    "PetalPort",
     "PetalResult",
     "PlanningStrategy",
     "Policy",
     "ReinferenceStrategy",
+    "RepairLoopReinference",
     "RetrievedDocument",
     "Retriever",
     "ReviewDecision",
@@ -105,6 +134,7 @@ __all__ = [
     "StaticPlanning",
     "Step",
     "StopReason",
+    "SubprocessRunner",
     "TaskStatus",
     "ThresholdReinference",
     "ToolCall",

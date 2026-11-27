@@ -25,6 +25,8 @@ from foaa.flowers.common import (
     DecisionStatus,
     FlowerDecision,
     ModelPort,
+    ModelRequest,
+    ModelResponse,
     Objective,
     PetalResult,
     Risk,
@@ -32,7 +34,7 @@ from foaa.flowers.common import (
     Skill,
     TaskStatus,
 )
-from foaa.flowers.petals import Petal
+from foaa.flowers.petals import PetalPort
 from foaa.flowers.root import Retriever
 from foaa.flowers.runtime import AgentHarness, CapabilityKit, Configurable
 from foaa.governance import DenyAllReviewGate, Policy, ReviewGate
@@ -59,6 +61,19 @@ class _HarnessMind:
         return conversation.text
 
 
+class _NoModel:
+    """Stands in when a center has no model: deterministic strategies never call it."""
+
+    def __init__(self, center: str) -> None:
+        self._center = center
+
+    async def complete(self, request: ModelRequest) -> ModelResponse:
+        raise FoaaError(
+            f"center {self._center!r} has no model; call set_model() or use deterministic "
+            "strategies (StaticPlanning, ThresholdReinference, RepairLoopReinference)"
+        )
+
+
 class Anther(Configurable):
     """The flower center: the agent that calls its subagents (petals) and coordinates them.
 
@@ -82,7 +97,7 @@ class Anther(Configurable):
         name: str,
         model: ModelPort | None = None,
         *,
-        petals: Iterable[Petal] = (),
+        petals: Iterable[PetalPort] = (),
         prompt: str = "",
         skills: Iterable[Skill] = (),
         mcp: Iterable[McpConnection] = (),
@@ -114,7 +129,7 @@ class Anther(Configurable):
         self.bus: EventBus = bus or InMemoryEventBus()
         self.review_gate: ReviewGate = review_gate or DenyAllReviewGate()
         self.max_rounds = max_rounds
-        self._petals: dict[str, Petal] = {}
+        self._petals: dict[str, PetalPort] = {}
         for petal in petals:
             self.add_petal(petal)
 
@@ -123,13 +138,13 @@ class Anther(Configurable):
 
     # -- configuration -----------------------------------------------------------------------
 
-    def add_petal(self, petal: Petal) -> Self:
+    def add_petal(self, petal: PetalPort) -> Self:
         if petal.name in self._petals:
             raise ValueError(f"petal {petal.name!r} already belongs to {self.name!r}")
         self._petals[petal.name] = petal
         return self
 
-    def set_petals(self, petals: Iterable[Petal]) -> Self:
+    def set_petals(self, petals: Iterable[PetalPort]) -> Self:
         self._petals = {}
         for petal in petals:
             self.add_petal(petal)
@@ -140,7 +155,7 @@ class Anther(Configurable):
         return self
 
     @property
-    def petals(self) -> Mapping[str, Petal]:
+    def petals(self) -> Mapping[str, PetalPort]:
         return dict(self._petals)
 
     def set_planning(self, planning: PlanningStrategy) -> Self:
@@ -182,7 +197,11 @@ class Anther(Configurable):
         )
         ctx = ctx.with_cause(received.event_id)
         harness = AgentHarness(
-            name=self.name, role=self.role, model=self._require_model(), kit=self.kit, ctx=ctx
+            name=self.name,
+            role=self.role,
+            model=self.model or _NoModel(self.name),
+            kit=self.kit,
+            ctx=ctx,
         )
         mind = _HarnessMind(harness)
         profiles = tuple(PetalProfile(p.name, p.description) for p in self._petals.values())

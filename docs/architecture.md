@@ -68,6 +68,20 @@ flowchart TB
 4. Return a `PetalResult`: conclusion, evidence, sources, risks, uncertainty, confidence,
    and the actions it performed. Failures are returned, not raised.
 
+### Who executes a petal (ADR 0006)
+
+The center depends only on `PetalPort`. **FOAA is not a harness**: the flower defines the
+role, the policy, and the evidence contract; execution belongs to whatever runtime fits.
+
+| Petal | Executes with | Governance |
+|---|---|---|
+| `ModelPetal` (alias `Petal`) | FOAA's native reference loop over a `ModelPort` | every call authorized as it happens |
+| `HarnessPetal` | any `HarnessPort`: Claude Code, Agent SDK, Codex, LangGraph... | policy → `HarnessPermissions` before; reported actions audited after (`audit: post_hoc`) |
+| `CommandPetal` | a `CommandRunner` (pytest, ruff, build) | `command/<program>` checked before it runs |
+
+With deterministic strategies (`StaticPlanning`, `ThresholdReinference`,
+`RepairLoopReinference`) the center needs no model at all.
+
 ---
 
 ## 2. Package map and layers
@@ -191,6 +205,9 @@ locally; the wind and light observers will consume the same stream.
   (`OpenAICompatibleModel`). For anything else, follow [the adapter contract](adapters.md) and
   run the conformance kit.
 * `InMemoryRetriever` is keyword-based, meant for tests and tiny corpora.
+* Simulated orchestrations live in `tests/orchestration/`, from one petal to a mini software
+  factory, all with `foaa.testing.FakeHarness` / `FakeCommandRunner`.
+* Real harness adapters (`foaa[claude-agent-sdk]`, ...) are next; they implement `HarnessPort`.
 * Skills are injected into the system prompt; skill-bundled tools/scripts are not executed.
 * The center's events and decisions are in memory; durable transports come with EDD work.
 * Next ecosystem parts: bees (cross-flower), environment, soil (governed memory), observers.

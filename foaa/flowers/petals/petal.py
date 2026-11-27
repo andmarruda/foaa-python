@@ -37,8 +37,12 @@ When you are done, answer with a single JSON object (you may wrap it in ```json)
 Be honest about uncertainty. Never invent sources. Confidence is a number from 0 to 1."""
 
 
-class Petal(Configurable):
-    """A subagent: one clear, bounded specialty inside a flower.
+class ModelPetal(Configurable):
+    """A subagent run by FOAA's native, reference model loop.
+
+    This is *one* way to execute a petal, useful when you have a model but no harness. To
+    delegate execution to Claude Code, Codex, or any other runtime, use
+    :class:`~foaa.flowers.petals.HarnessPetal` instead (ADR 0006).
 
     A petal receives the same capability kit as a center (prompt, skills, MCP connections,
     RAG sources, policy), by constructor parameter or setter. It executes its assignment and
@@ -76,12 +80,12 @@ class Petal(Configurable):
             policy=policy or Policy.for_petal(f"{name}-default"),
         )
 
-    def set_description(self, description: str) -> Petal:
+    def set_description(self, description: str) -> ModelPetal:
         self.description = description
         return self
 
     def __repr__(self) -> str:
-        return f"Petal(name={self.name!r})"
+        return f"ModelPetal(name={self.name!r})"
 
     async def run(
         self,
@@ -241,3 +245,7 @@ def _failed(
         uncertainty=reason,
         actions=actions,
     )
+
+
+Petal = ModelPetal
+"""Backwards-compatible name for :class:`ModelPetal`."""
