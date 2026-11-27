@@ -8,12 +8,12 @@ Both are ports with interchangeable implementations, so the way a center reasons
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Protocol
 
-from foaa.common import ModelOutputError, RiskLevel, highest_risk
+from foaa.common import ModelOutputError, RiskLevel, highest_risk, new_id
 from foaa.flowers.common import Assignment, Objective, PetalResult, Risk
 from foaa.flowers.common.parsing import as_float_01, as_list, as_str, extract_json_object
 from foaa.flowers.root import RetrievedDocument
@@ -292,12 +292,22 @@ class ThresholdReinference:
         if failed:
             if data.round < data.max_rounds:
                 by_task = {a.id: a for a in data.assignments}
+                # Retries keep the original dependency order: a dependency that is retried too
+                # points at its retry; one that already succeeded stays a satisfied result.
+                new_ids = {r.task_id: new_id("task") for r in failed}
                 retries = tuple(
                     Assignment(
+                        id=new_ids[r.task_id],
                         petal=r.petal,
                         instruction=by_task[r.task_id].instruction
                         if r.task_id in by_task
                         else data.objective.description,
+                        depends_on=tuple(
+                            new_ids.get(dep, dep)
+                            for dep in (
+                                by_task[r.task_id].depends_on if r.task_id in by_task else ()
+                            )
+                        ),
                         feedback=f"Your previous attempt failed: {r.conclusion}",
                     )
                     for r in failed
@@ -310,7 +320,9 @@ class ThresholdReinference:
             )
 
         # Failed attempts were retried (or escalated above), so successful results are current.
-        current = [r for r in data.results if r.succeeded]
+        # Only each petal's latest result counts: superseded attempts are history, not evidence.
+        latest_by_petal = {r.petal: r for r in data.results}
+        current = [r for r in latest_by_petal.values() if r.succeeded]
         risk = highest_risk(r.risk_level for r in current)
         if risk.weight >= self.escalate_at.weight:
             return Verdict(
@@ -328,3 +340,61 @@ class ThresholdReinference:
                 reason=f"confidence {confidence} is below {self.min_confidence}",
             )
         return Verdict(VerdictStatus.COMPLETE, self.summarize(current), confidence=confidence)
+
+
+@dataclass(frozen=True)
+class RepairLoopReinference:
+    """Verify-and-repair: a failing verifier sends its evidence back to the petal that can fix it.
+
+    ``repairs`` maps a verifier petal (tests, lint, type check...) to its fixer petal (the
+    coder). When a mapped verifier fails and rounds remain, the center plans a new round:
+    the fixer gets the verifier's output as feedback, and every verifier of that fixer runs
+    again on the fixed work. When rounds run out, the flower escalates to the gardener.
+
+    Anything else (no failures, or failures nobody can repair) is decided by ``fallback``.
+    This is the loop at the heart of an agentic software factory, kept deterministic.
+    """
+
+    repairs: Mapping[str, str]
+    fallback: ReinferenceStrategy = field(default_factory=ThresholdReinference)
+
+    async def evaluate(self, data: ReinferenceInput, mind: CenterMind) -> Verdict:
+        repairable = [r for r in data.latest if not r.succeeded and r.petal in self.repairs]
+        if not repairable:
+            return await self.fallback.evaluate(data, mind)
+        if data.round >= data.max_rounds:
+            return Verdict(
+                VerdictStatus.ESCALATE,
+                "verification still failing",
+                reason="; ".join(f"{r.petal}: {r.conclusion}" for r in repairable),
+            )
+
+        by_petal = {a.petal: a for a in data.assignments}
+        refinements: list[Assignment] = []
+        for fixer in dict.fromkeys(self.repairs[r.petal] for r in repairable):
+            failures = [r for r in repairable if self.repairs[r.petal] == fixer]
+            previous = by_petal.get(fixer)
+            fix = Assignment(
+                petal=fixer,
+                instruction=previous.instruction if previous else data.objective.description,
+                feedback="Verification failed. Fix the work so these pass:\n"
+                + "\n".join(f"- [{r.petal}] {r.conclusion}" for r in failures),
+            )
+            refinements.append(fix)
+            for verifier, owner in self.repairs.items():
+                if owner != fixer:
+                    continue
+                earlier = by_petal.get(verifier)
+                refinements.append(
+                    Assignment(
+                        petal=verifier,
+                        instruction=earlier.instruction if earlier else "Verify the fix",
+                        depends_on=(fix.id,),
+                    )
+                )
+        names = ", ".join(r.petal for r in repairable)
+        return Verdict(
+            VerdictStatus.REFINE,
+            f"repairing after failed verification: {names}",
+            refinements=tuple(refinements),
+        )

@@ -6,7 +6,8 @@
 ## Context
 
 FOAA needs a clear definition of "agent" and "subagent" that stays flexible: the project is an
-orchestrator with a harness, and users define their own agents.
+orchestrator, and users define their own agents. (Amended by ADR 0006: FOAA governs
+harnesses; the native loop is one petal implementation, `ModelPetal`.)
 
 ## Decision
 

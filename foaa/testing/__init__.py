@@ -7,6 +7,7 @@ from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 
 from foaa.flowers.common import ModelRequest, ModelResponse, ToolCall
+from foaa.testing.harness import FakeCommandRunner, FakeHarness, command_result, outcome
 
 Reply = ModelResponse | str | Callable[[ModelRequest], ModelResponse | str]
 
@@ -52,3 +53,15 @@ class ScriptedModel:
         if callable(item):
             item = item(request)
         return ModelResponse(item) if isinstance(item, str) else item
+
+
+__all__ = [
+    "FakeCommandRunner",
+    "FakeHarness",
+    "ScriptedModel",
+    "command_result",
+    "json_reply",
+    "outcome",
+    "reply",
+    "tool_call",
+]

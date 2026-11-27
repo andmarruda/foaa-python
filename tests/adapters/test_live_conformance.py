@@ -22,7 +22,7 @@ pytestmark = pytest.mark.skipif(
 
 async def test_live_anthropic_conformance() -> None:
     anthropic = pytest.importorskip("anthropic")
-    model = AnthropicModel(anthropic.AsyncAnthropic(), max_tokens=2_000, effort="low")
+    model = AnthropicModel(anthropic.AsyncAnthropic(), max_tokens=2_000, effort="medium")
     report = await run_conformance(model)
     print(report.summary())
     report.raise_for_failures()

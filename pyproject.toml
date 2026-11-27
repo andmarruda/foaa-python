@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "foaa"
 version = "0.1.0.dev0"
-description = "Flower-Orchestrated Agent Architecture: an orchestrator and harness for governed, observable multi-agent systems."
+description = "Flower-Orchestrated Agent Architecture: an orchestrator that governs, coordinates, and observes the agent harnesses you already use."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
